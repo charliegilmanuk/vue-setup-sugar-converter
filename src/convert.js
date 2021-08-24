@@ -8,6 +8,7 @@ import { parseComponent } from 'vue-sfc-parser';
 const convert = (pattern, {destination, overwrite}) => {
     if (!pattern) {
         console.log(chalk.red('You must specify files to convert, you may use glob patterns or single file names, e.g. `convert .src/**`'));
+        return;
     }
 
     const allFiles = glob.sync(pattern);
@@ -23,32 +24,55 @@ const convert = (pattern, {destination, overwrite}) => {
     }
 
     const components = rawComponents.filter(x => !x.isConverted).map(component => {
-        const { script } = component;
-        let result = script;
+        const { script, template, style } = component;
+        let result = script.content.trim();
 
         [findAndRemoveComponents, findAndRemoveEmits, findAndRemoveProps].forEach(fn => {
             const replaceResult = fn(result);
             if (replaceResult) {
+                result = replaceResult.result;
                 Object.assign(component, replaceResult);
             }
         });
 
-        const doubleCommaExpr = new RegExp(/,\s*,/gi);
-        while (result.search(doubleCommaExpr) > -1) {
-            result = result.replace(doubleCommaExpr, ',');
-        }
+        // This would also replace names in nested objects, NOT GOOD
+        result = result.replace(/[^a-zA-Z]name:\s?['"].+['"]/gi, '');
 
-        component.result = result;
+        result = removeDoubleSymbols(result);
+        result = insertEmits(result, component.emits);
+        result = insertProps(result, component.props);
+
+        component.result =
+            reconstructSFCBlock(template, 'template') +
+            reconstructSFCBlock(result, 'script', { setup: true }) +
+            reconstructSFCBlock(style, 'style');
 
         return component;
     });
+
+    let successfulWrites = [];
+    let failedWrites = [];
 
     components.forEach(component => {
         const { result, sourcePath } = component;
 
         const outputFile = path.join('output', sourcePath);
-        fse.outputFileSync(outputFile, result);
+        try {
+            fse.outputFileSync(outputFile, result);
+            console.log(chalk.green(`Successfully wrote file to ${outputFile}`))
+            successfulWrites.push(outputFile);
+        } catch (err) {
+            console.log(chalk.red(`Failed to write ${outputFile}`));
+            console.error(chalk.red(err));
+            failedWrites.push(outputFile);
+        }
     });
+
+    console.log();
+    console.log(chalk.bgGreen(`${successfulWrites.length} of ${components.length} files successfully converted!`));
+    if (failedWrites.length) {
+        console.log(chalk.bgYellow(`${failedWrites.length} files failed`, failedWrites));
+    }
 };
 
 /**
@@ -60,14 +84,19 @@ const parseComponents = paths => {
     return paths.map(sourcePath => {
         const rawCode = fs.readFileSync(sourcePath, 'utf-8');
         const component = parseComponent(rawCode);
-        return {
-            sourcePath,
-            rawCode,
-            script: component.script.content.trim(),
-            template: component.template.content.trim(),
-            isConverted: component.script.content.trim().search(/<script.*setup.*>/gi) > -1
+        const { script, styles, template } = component;
+        if (script) {
+            return {
+                sourcePath,
+                script,
+                template,
+                style: styles ? styles[0] : null,
+                isConverted: script.content.search(/<script.*setup.*>/gi) > -1
+            }
+        } else {
+            console.log(chalk.yellow(`Skipping ${sourcePath} as there is no script tag defined.`));
         }
-    });
+    }).filter(x => !!x);
 }
 
 /**
@@ -153,7 +182,70 @@ const findAndRemoveComponents = script => {
     return findAndExtractKey(script, 'components', {
         startExp: new RegExp(/components:\s?{/gi),
         startChar: '{', endChar: '}'
-    })
+    });
 }
+
+const findAndRemoveDefaultExport = script => {
+    return findAndExtractKey(script, 'export', {
+        startExp: new RegExp(/export default.*{/gi),
+        startChar: '{', endChar: '}'
+    });
+}
+
+const removeDoubleSymbols = str => {
+    const patterns = [
+        [new RegExp(/([,;])\s*[,;]/gi), (group, char) => char],
+        [new RegExp(/{\s*,/gi), '{'],
+    ];
+
+    patterns.forEach(symbolSet => {
+        const [expr, replace] = symbolSet;
+        while (str && str.search(expr) > -1) {
+            str = str.replace(expr, replace);
+        }
+    });
+
+    return str;
+}
+
+const reconstructSFCBlock = (block, tag, extraAttrs = {}) => {
+    let str = '';
+
+    if (block) {
+        const { attrs, content } = block;
+        str = `<${tag}`;
+        if (attrs && Object.keys(attrs).length) {
+            Object.keys(attrs).forEach(key => {
+                str += ` ${key}`;
+                if (attrs[key] !== true) {
+                    str += `="${attrs[key]}"`
+                }
+            })
+        }
+        str += `>${content}</${tag}>`;
+    }
+
+    return str.length ? `${str}\n\n` : '';
+}
+
+const insertProps = (script, props) => {
+    const exportIndex = script.indexOf('export default');
+    if (exportIndex && props) {
+        return script.substr(0, exportIndex) +
+            `const props = defineProps(${props});\n\n` +
+            script.substr(exportIndex);
+    }
+    return script;
+};
+
+const insertEmits = (script, emits) => {
+    const exportIndex = script.indexOf('export default');
+    if (exportIndex && emits) {
+        return script.substr(0, exportIndex) +
+            `const emit = defineEmits(${emits});\n\n` +
+            script.substr(exportIndex);
+    }
+    return script;
+};
 
 export default convert;
