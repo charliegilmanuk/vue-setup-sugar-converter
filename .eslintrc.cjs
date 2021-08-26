@@ -1,13 +1,20 @@
-export default {
+module.exports = {
   root: true,
+
+  globals: {
+    defineProps: "readonly",
+    defineEmits: "readonly",
+    defineExpose: "readonly",
+    withDefaults: "readonly"
+  },
 
   env: {
     node: true,
   },
 
-  plugins: ['prettier'],
+  plugins: ['prettier', 'vue'],
 
-  extends: ['eslint:recommended', 'plugin:prettier/recommended'],
+  extends: ['eslint:recommended', 'plugin:prettier/recommended', 'plugin:vue/vue3-recommended'],
 
   parserOptions: {
     parser: '@babel/eslint-parser',
