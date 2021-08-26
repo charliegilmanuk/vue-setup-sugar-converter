@@ -1,5 +1,44 @@
 import chalk from 'chalk';
 
+export const matchInRoot = (
+  strToMatch,
+  body,
+  startIndex = 0,
+  finishIndex = null
+) => {
+  if (!finishIndex) {
+    finishIndex = body.length - 1;
+  }
+  const context = body.substr(startIndex, finishIndex - startIndex);
+  const matches = context.match(strToMatch);
+
+  let result = null;
+
+  if (matches) {
+    matches.forEach(match => {
+      let bracketOpenCount = 0;
+      let bracketCloseCount = 0;
+      const matchIndex = body.search(match);
+      if (matchIndex >= startIndex && matchIndex <= finishIndex) {
+        for (let i = startIndex; i <= matchIndex; i++) {
+          if (body[i] === '{') bracketOpenCount++;
+          if (body[i] === '}') bracketCloseCount++;
+        }
+      }
+
+      if (bracketOpenCount === bracketCloseCount) {
+        result = {
+          index: matchIndex,
+          length: match.length,
+          match,
+        };
+      }
+    });
+  }
+
+  return result;
+};
+
 /**
  * Returns script between two specified brackets
  * @param {string} str
@@ -7,15 +46,22 @@ import chalk from 'chalk';
  * @param startChar
  * @param endChar
  */
-const matchScriptBetween = (str, startExp, startChar = '{', endChar = '}') => {
-  const startIndex = str.search(startExp);
+export const matchScriptBetween = (
+  str,
+  startExp,
+  startChar = '{',
+  endChar = '}'
+) => {
+  const match = str.match(startExp);
 
-  if (startIndex > -1) {
+  if (match) {
+    const matchLength = match[0].length;
+    const startIndex = str.search(startExp);
     let finishIndex = null;
     let startBracketsCount = 0;
     let endBracketsCount = 0;
 
-    for (let i = startIndex; i < str.length; i++) {
+    for (let i = startIndex + matchLength - 1; i < str.length; i++) {
       if (!finishIndex) {
         if (str[i] === startChar) startBracketsCount++;
         if (str[i] === endChar) {
@@ -35,7 +81,7 @@ const matchScriptBetween = (str, startExp, startChar = '{', endChar = '}') => {
       );
       return null;
     } else {
-      let startOfValue = startIndex + str.match(startExp)[0].length;
+      let startOfValue = startIndex + matchLength;
       return {
         full: {
           result: str.substr(
