@@ -43,7 +43,6 @@ const convert = (pattern, { destination = 'output' }) => {
       script.applyProps();
       script.findAndRemoveExport();
       script.findAndRemoveSetup();
-      script.findAndRemoveSetupReturn();
       script.removeDoubleSymbols();
       script.findAndRemoveDefineComponent();
       component.writeToFile(destination);

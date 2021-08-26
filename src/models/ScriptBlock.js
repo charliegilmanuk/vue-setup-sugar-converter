@@ -44,19 +44,14 @@ export default class ScriptBlock extends SFCBlock {
     );
 
     if (data) {
+      let setupWithoutReturn = data.matched.result.replace(
+        /return\s?{[^}]*};?[}\s]*$/gis,
+        ''
+      );
+
       this.content = this.content
-        .replace(data.full.result, data.matched.result)
+        .replace(data.full.result, setupWithoutReturn)
         .replace(/\s,/gi, '');
-    }
-  }
-
-  findAndRemoveSetupReturn() {
-    const data = matchInRoot(new RegExp(/return.+;?/gi), this.content);
-
-    if (data) {
-      this.content =
-        this.content.substr(0, data.index) +
-        this.content.substr(data.index + data.length);
     }
   }
 
@@ -91,7 +86,7 @@ export default class ScriptBlock extends SFCBlock {
 
         if (fullMatch && valMatch) {
           this.emits = valMatch;
-          this.content.replace(fullMatch, '');
+          this.content = this.content.replace(fullMatch, '');
         }
       }
     }
@@ -155,6 +150,6 @@ export default class ScriptBlock extends SFCBlock {
       }
     });
 
-    this.content = this.content.replace(/\s*\)\s*$/, '');
+    this.content = this.content.trim().replace(/\)$/, '\n');
   }
 }
