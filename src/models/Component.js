@@ -1,10 +1,11 @@
 import fs from 'fs';
 import { parseComponent } from 'vue-sfc-parser';
 import { ESLint } from 'eslint';
-import baseConfig from '../../.eslintrc.js';
+import baseConfig from '../../.eslintrc.cjs';
 const eslint = new ESLint({
   fix: true,
-  baseConfig,
+  baseConfig: baseConfig,
+  ignore: false,
 });
 import ScriptBlock from './ScriptBlock.js';
 import TemplateBlock from './TemplateBlock.js';
@@ -45,9 +46,15 @@ export default class Component {
   reconstructSFC() {
     let str = '';
 
-    if (this.template) str += this.template.getOutput();
-    if (this.script) str += this.script.getOutput({ setup: true });
-    if (this.style) str += this.style.getOutput();
+    if (this.template && this.template.content.trim()) {
+      str += this.template.getOutput();
+    }
+    if (this.script && this.script.content.trim()) {
+      str += this.script.getOutput({ setup: true });
+    }
+    if (this.style && this.style.content.trim()) {
+      str += this.style.getOutput();
+    }
 
     return str;
   }
@@ -73,19 +80,11 @@ export default class Component {
     }
   }
 
-  lintFile(dir) {
+  async lintFile(dir) {
     const outputFile = path.join(dir, this.sourcePath);
 
-    eslint.lintFiles(outputFile).then(lintResult => {
-      console.log(lintResult);
-      const { messages, errorCount, warningCount } = lintResult[0];
-      console.log(
-        `ESLint formatted code, there were ${errorCount} errors, ${warningCount} warnings`
-      );
-      messages.forEach(message => {
-        const severityColor = message.severity < 2 ? chalk.yellow : chalk.red;
-        console.log(severityColor(`${message.ruleId}: ${message.message}`));
-      });
-    });
+    const results = await eslint.lintFiles(outputFile);
+
+    await ESLint.outputFixes(results);
   }
 }
