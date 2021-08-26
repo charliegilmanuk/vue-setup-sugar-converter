@@ -44,8 +44,6 @@ export default class ScriptBlock extends SFCBlock {
     );
 
     if (data) {
-      console.log(data.matched);
-
       this.content = this.content
         .replace(data.full.result, data.matched.result)
         .replace(/\s,/gi, '');
@@ -56,7 +54,6 @@ export default class ScriptBlock extends SFCBlock {
     const data = matchInRoot(new RegExp(/return.+;?/gi), this.content);
 
     if (data) {
-      console.log(`setup return`, data);
       this.content =
         this.content.substr(0, data.index) +
         this.content.substr(data.index + data.length);
@@ -86,6 +83,17 @@ export default class ScriptBlock extends SFCBlock {
     if (data) {
       this.emits = data.key;
       this.content = data.result;
+    } else {
+      const emitExpr = new RegExp(/emits:\s?(.+),\n?/i);
+      const match = this.content.match(emitExpr);
+      if (match) {
+        const [fullMatch, valMatch] = match;
+
+        if (fullMatch && valMatch) {
+          this.emits = valMatch;
+          this.content.replace(fullMatch, '');
+        }
+      }
     }
   }
 
@@ -100,6 +108,12 @@ export default class ScriptBlock extends SFCBlock {
       this.components = data.key;
       this.content = data.result;
     }
+  }
+
+  findAndRemoveDefineComponent() {
+    this.content = this.content
+      .replace(/defineComponent,?\s?/gi, '')
+      .replace(/import {\s*} from .vue.;?/gi, '');
   }
 
   applyEmits() {
@@ -140,5 +154,7 @@ export default class ScriptBlock extends SFCBlock {
         this.content = this.content.replace(expr, replace);
       }
     });
+
+    this.content = this.content.replace(/\s*\)\s*$/, '');
   }
 }

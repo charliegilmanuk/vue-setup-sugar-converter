@@ -45,6 +45,7 @@ const convert = (pattern, { destination = 'output' }) => {
       script.findAndRemoveSetup();
       script.findAndRemoveSetupReturn();
       script.removeDoubleSymbols();
+      script.findAndRemoveDefineComponent();
       component.writeToFile(destination);
       component.lintFile(destination);
 
