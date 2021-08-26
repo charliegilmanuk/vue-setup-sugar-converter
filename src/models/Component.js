@@ -1,6 +1,11 @@
 import fs from 'fs';
 import { parseComponent } from 'vue-sfc-parser';
-import NoScriptTagException from '../exceptions/NoScriptTagException.js';
+import { ESLint } from 'eslint';
+import baseConfig from '../../.eslintrc.js';
+const eslint = new ESLint({
+  fix: true,
+  baseConfig,
+});
 import ScriptBlock from './ScriptBlock.js';
 import TemplateBlock from './TemplateBlock.js';
 import StyleBlock from './StyleBlock.js';
@@ -22,8 +27,7 @@ export default class Component {
     this.sourcePath = sourcePath;
 
     const rawCode = fs.readFileSync(sourcePath, 'utf-8');
-    const component = parseComponent(rawCode);
-    const { script, styles, template } = component;
+    const { script, styles, template } = parseComponent(rawCode);
 
     if (template) this.template = new TemplateBlock(template);
     if (styles && styles[0]) this.style = new StyleBlock(styles[0]);
@@ -67,5 +71,21 @@ export default class Component {
       console.log(chalk.red(`Failed to write ${outputFile}`));
       console.error(chalk.red(err));
     }
+  }
+
+  lintFile(dir) {
+    const outputFile = path.join(dir, this.sourcePath);
+
+    eslint.lintFiles(outputFile).then(lintResult => {
+      console.log(lintResult);
+      const { messages, errorCount, warningCount } = lintResult[0];
+      console.log(
+        `ESLint formatted code, there were ${errorCount} errors, ${warningCount} warnings`
+      );
+      messages.forEach(message => {
+        const severityColor = message.severity < 2 ? chalk.yellow : chalk.red;
+        console.log(severityColor(`${message.ruleId}: ${message.message}`));
+      });
+    });
   }
 }

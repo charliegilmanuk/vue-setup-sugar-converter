@@ -16,7 +16,7 @@ const getVueFiles = pattern => {
   return allSFC;
 };
 
-const convert = (pattern, { destination = 'output', overwrite }) => {
+const convert = (pattern, { destination = 'output' }) => {
   getVueFiles(pattern)
     .map(sourcePath => new Component(sourcePath))
     .filter(c => {
@@ -41,6 +41,7 @@ const convert = (pattern, { destination = 'output', overwrite }) => {
       component.script.applyEmits();
       component.script.applyProps();
       component.writeToFile(destination);
+      component.lintFile(destination);
 
       return component;
     });
