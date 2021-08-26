@@ -33,13 +33,18 @@ const convert = (pattern, { destination = 'output' }) => {
       return !skip;
     })
     .map(component => {
-      component.script.findAndRemoveComponents();
-      component.script.findAndRemoveEmits();
-      component.script.findAndRemoveProps();
-      component.script.removeComponentName();
-      component.script.removeDoubleSymbols();
-      component.script.applyEmits();
-      component.script.applyProps();
+      const { script } = component;
+      script.findAndRemoveComponents();
+      script.findAndRemoveEmits();
+      script.findAndRemoveProps();
+      script.removeComponentName();
+      script.removeDoubleSymbols();
+      script.applyEmits();
+      script.applyProps();
+      script.findAndRemoveExport();
+      script.findAndRemoveSetup();
+      script.findAndRemoveSetupReturn();
+      script.removeDoubleSymbols();
       component.writeToFile(destination);
       component.lintFile(destination);
 

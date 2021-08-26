@@ -1,4 +1,8 @@
-import { findAndExtractKey } from '../lib/StringHelpers.js';
+import {
+  findAndExtractKey,
+  matchInRoot,
+  matchScriptBetween,
+} from '../lib/StringHelpers.js';
 import SFCBlock from './SFCBlock.js';
 
 export default class ScriptBlock extends SFCBlock {
@@ -13,6 +17,50 @@ export default class ScriptBlock extends SFCBlock {
   removeComponentName() {
     // TODO: this would also replace names in nested objects, NOT GOOD
     this.content = this.content.replace(/[^a-zA-Z]name:\s?['"].+['"]/gi, '');
+  }
+
+  findAndRemoveExport() {
+    const data = matchScriptBetween(
+      this.content,
+      new RegExp(/export default.*{/gi)
+    );
+
+    if (data) {
+      let contentParts = data.full.result.split('\n');
+
+      delete contentParts[contentParts.length - 1];
+      delete contentParts[0];
+
+      this.content = this.content
+        .replace(data.full.result, contentParts.join('\n'))
+        .replace(/\s*;/gi, '');
+    }
+  }
+
+  findAndRemoveSetup() {
+    const data = matchScriptBetween(
+      this.content,
+      new RegExp(/setup\([^)]*\)\s?{/gi)
+    );
+
+    if (data) {
+      console.log(data.matched);
+
+      this.content = this.content
+        .replace(data.full.result, data.matched.result)
+        .replace(/\s,/gi, '');
+    }
+  }
+
+  findAndRemoveSetupReturn() {
+    const data = matchInRoot(new RegExp(/return.+;?/gi), this.content);
+
+    if (data) {
+      console.log(`setup return`, data);
+      this.content =
+        this.content.substr(0, data.index) +
+        this.content.substr(data.index + data.length);
+    }
   }
 
   findAndRemoveProps() {
@@ -56,18 +104,24 @@ export default class ScriptBlock extends SFCBlock {
 
   applyEmits() {
     if (this.exportIndex && this.emits) {
+      let str = `${
+        this.content.search(/emit\(/gi) > -1 ? `const emit = ` : ''
+      }defineEmits(${this.emits});\n\n`;
       this.content =
         this.content.substr(0, this.exportIndex) +
-        `const emit = defineEmits(${this.emits});\n\n` +
+        str +
         this.content.substr(this.exportIndex);
     }
   }
 
   applyProps() {
     if (this.exportIndex && this.props) {
+      let str = `${
+        this.content.search(/props/gi) > -1 ? `const props = ` : ''
+      }defineProps(${this.props});\n\n`;
       return (
         this.content.substr(0, this.exportIndex) +
-        `const props = defineProps(${this.props});\n\n` +
+        str +
         this.content.substr(this.exportIndex)
       );
     }
@@ -77,6 +131,7 @@ export default class ScriptBlock extends SFCBlock {
     const patterns = [
       [new RegExp(/([,;])\s*[,;]/gi), (group, char) => char],
       [new RegExp(/{\s*,/gi), '{'],
+      [new RegExp(/\n{3,}/gi), '\n'],
     ];
 
     patterns.forEach(symbolSet => {
