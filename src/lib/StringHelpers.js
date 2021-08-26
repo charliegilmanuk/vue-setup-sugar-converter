@@ -18,7 +18,9 @@ export const matchInRoot = (
     matches.forEach(match => {
       let bracketOpenCount = 0;
       let bracketCloseCount = 0;
-      const matchIndex = body.search(match);
+      const matchIndex = body.search(
+        match.replace(/[()]/gi, group => '\\' + group)
+      );
       if (matchIndex >= startIndex && matchIndex <= finishIndex) {
         for (let i = startIndex; i <= matchIndex; i++) {
           if (body[i] === '{') bracketOpenCount++;
