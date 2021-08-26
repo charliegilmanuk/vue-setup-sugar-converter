@@ -14,6 +14,7 @@ import fse from 'fs-extra';
 import chalk from 'chalk';
 import path from 'path';
 import ReconstructComponentException from '../exceptions/ReconstructComponentException.js';
+const __dirname = path.resolve();
 
 export default class Component {
   sourcePath = null;
@@ -49,7 +50,7 @@ export default class Component {
     if (this.template && this.template.content.trim()) {
       str += this.template.getOutput();
     }
-    if (this.script && this.script.content.trim()) {
+    if (this.script && this.script.content.trim().length > 3) {
       str += this.script.getOutput({ setup: true });
     }
     if (this.style && this.style.content.trim()) {
@@ -62,7 +63,7 @@ export default class Component {
   writeToFile(dir) {
     const { sourcePath } = this;
 
-    const outputFile = path.join(dir, sourcePath);
+    const outputFile = path.join(__dirname, dir, sourcePath);
 
     try {
       let data = null;
@@ -81,7 +82,7 @@ export default class Component {
   }
 
   async lintFile(dir) {
-    const outputFile = path.join(dir, this.sourcePath);
+    const outputFile = path.join(__dirname, dir, this.sourcePath);
 
     const results = await eslint.lintFiles(outputFile);
 
