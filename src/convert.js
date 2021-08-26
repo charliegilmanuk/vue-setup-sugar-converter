@@ -33,20 +33,35 @@ const convert = (pattern, { destination = 'output' }) => {
       return !skip;
     })
     .map(component => {
-      const { script } = component;
-      script.findAndRemoveComponents();
-      script.findAndRemoveEmits();
-      script.findAndRemoveProps();
-      script.removeComponentName();
-      script.removeDoubleSymbols();
-      script.applyEmits();
-      script.applyProps();
-      script.findAndRemoveExport();
-      script.findAndRemoveSetup();
-      script.removeDoubleSymbols();
-      script.findAndRemoveDefineComponent();
-      component.writeToFile(destination);
-      component.lintFile(destination);
+      const { script, sourcePath } = component;
+
+      try {
+        script.findAndRemoveComponents();
+        script.findAndRemoveEmits();
+        script.findAndRemoveProps();
+        script.removeDoubleSymbols();
+        script.applyEmits();
+        script.applyProps();
+        script.removeComponentName();
+        script.findAndRemoveExport();
+        script.findAndRemoveSetup();
+        script.removeDoubleSymbols();
+        script.findAndRemoveDefineComponent();
+
+        try {
+          component.writeToFile(destination);
+          component.lintFile(destination);
+        } catch (err) {
+          console.log(
+            chalk.red(
+              `Error saving/linting ${sourcePath}, conversion completed but could not save: `,
+              err
+            )
+          );
+        }
+      } catch (err) {
+        console.log(chalk.red(`Error converting ${sourcePath}: `, err));
+      }
 
       return component;
     });
