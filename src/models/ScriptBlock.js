@@ -65,6 +65,17 @@ export default class ScriptBlock extends SFCBlock {
     if (data) {
       this.props = data.key;
       this.content = data.result;
+    } else {
+      const propExpr = new RegExp(/props:\s?(.+),\n?/i);
+      const match = this.content.match(propExpr);
+      if (match) {
+        const [fullMatch, valMatch] = match;
+
+        if (fullMatch && valMatch) {
+          this.props = valMatch;
+          this.content = this.content.replace(fullMatch, '');
+        }
+      }
     }
   }
 
@@ -128,11 +139,10 @@ export default class ScriptBlock extends SFCBlock {
       let str = `${
         this.content.search(/props/gi) > -1 ? `const props = ` : ''
       }defineProps(${this.props});\n\n`;
-      return (
+      this.content =
         this.content.substr(0, this.exportIndex) +
         str +
-        this.content.substr(this.exportIndex)
-      );
+        this.content.substr(this.exportIndex);
     }
   }
 
@@ -150,6 +160,6 @@ export default class ScriptBlock extends SFCBlock {
       }
     });
 
-    this.content = this.content.trim().replace(/\)$/, '\n');
+    this.content = this.content.trim().replace(/\s\)$/, '\n');
   }
 }
