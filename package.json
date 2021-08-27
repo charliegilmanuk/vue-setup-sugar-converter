@@ -7,10 +7,14 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "charliegilmanuk@gmail.com",
-  "license": "ISC",
+  "repository": "https://github.com/charliegilmanuk/vue-setup-sugar-converter",
+  "license": "MIT",
   "bin": {
     "vue-setup-sugar": "babel-node index.js"
   },
+  "keywords": [
+    "vue", "3.2", "script setup", "sugar", "sfc"
+  ],
   "type": "module",
   "dependencies": {
     "chalk": "^4.1.2",
