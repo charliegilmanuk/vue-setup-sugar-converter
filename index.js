@@ -9,11 +9,7 @@ program
   )
   .option(
     '-d, --destination <directory>',
-    'The directory to output the converted components to, the folder structure of the components will be kept intact, defaults to ./<this package name>'
-  )
-  .option(
-    '-o, --overwrite',
-    "Ignores the destination and overwrites the specified files in place, make sure you're using source control!"
+    'The directory to output the converted components to, the folder structure of the components will be kept intact, defaults to ./output'
   )
   .action(convert);
 
