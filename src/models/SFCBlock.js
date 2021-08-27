@@ -17,7 +17,7 @@ export default class SFCBlock extends BaseSFCBlock {
           }
         });
       }
-      output += `>${content}</${type}>`;
+      output += `>\n${content}</${type}>`;
     }
 
     if (output.length) {
