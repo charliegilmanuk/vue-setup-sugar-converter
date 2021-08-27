@@ -1,6 +1,6 @@
 {
   "name": "vue-setup-sugar-converter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Node JS CLI tool used to automatically convert Vue Composition API single-file components to use the Vue 3.2+ <script setup> sugar",
   "main": "index.js",
   "author": "charliegilmanuk@gmail.com",
