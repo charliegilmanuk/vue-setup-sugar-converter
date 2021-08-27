@@ -10,10 +10,17 @@ export default class ScriptBlock extends SFCBlock {
   props = null;
   components = null;
 
+  /**
+   * Gets the current index of the default export
+   * @returns {number}
+   */
   get exportIndex() {
     return this.content.indexOf('export default');
   }
 
+  /**
+   * Removes the component name from the script content
+   */
   removeComponentName() {
     const rootMatch = matchInRoot(
       /[^a-zA-Z]name:\s?['"].+['"]/gi,
@@ -28,6 +35,9 @@ export default class ScriptBlock extends SFCBlock {
     }
   }
 
+  /**
+   * Removes the default export from the script content
+   */
   findAndRemoveExport() {
     const data = matchScriptBetween(
       this.content,
@@ -46,6 +56,9 @@ export default class ScriptBlock extends SFCBlock {
     }
   }
 
+  /**
+   * Removes the setup function from the script content but retain the contents of it
+   */
   findAndRemoveSetup() {
     const data = matchScriptBetween(
       this.content,
@@ -64,6 +77,9 @@ export default class ScriptBlock extends SFCBlock {
     }
   }
 
+  /**
+   * Removes any props from the script content and saves them to the props property
+   */
   findAndRemoveProps() {
     const data = findAndExtractKey(this.content, {
       startExp: new RegExp(/[^a-zA-Z]props:\s?{/i),
@@ -88,6 +104,9 @@ export default class ScriptBlock extends SFCBlock {
     }
   }
 
+  /**
+   * Removes any emits from the script content and saves them to the emits property
+   */
   findAndRemoveEmits() {
     const data = findAndExtractKey(this.content, {
       startExp: new RegExp(/[^a-zA-Z]emits:\s?\[/i),
@@ -112,6 +131,9 @@ export default class ScriptBlock extends SFCBlock {
     }
   }
 
+  /**
+   * Removes any components from the script content and saves them to the components property
+   */
   findAndRemoveComponents() {
     const data = findAndExtractKey(this.content, {
       startExp: new RegExp(/[^a-zA-Z]components:\s?{/i),
@@ -125,12 +147,18 @@ export default class ScriptBlock extends SFCBlock {
     }
   }
 
+  /**
+   * Remove the defineComponent function from the script, as well as the associated import
+   */
   findAndRemoveDefineComponent() {
     this.content = this.content
       .replace(/defineComponent,?\s?/i, '')
       .replace(/import {\s*} from .vue.;?/i, '');
   }
 
+  /**
+   * Use any saved emits to reinsert them back into the script content
+   */
   applyEmits() {
     if (this.exportIndex && this.emits) {
       let str = `${
@@ -143,6 +171,9 @@ export default class ScriptBlock extends SFCBlock {
     }
   }
 
+  /**
+   * Use any saved props to reinsert them back into the script content
+   */
   applyProps() {
     if (this.exportIndex && this.props) {
       let str = `${
@@ -155,6 +186,9 @@ export default class ScriptBlock extends SFCBlock {
     }
   }
 
+  /**
+   * Loop through and remove any invalid syntax patterns from script content
+   */
   removeDoubleSymbols() {
     const patterns = [
       [new RegExp(/([,;])\s*[,;]/gi), (group, char) => char],

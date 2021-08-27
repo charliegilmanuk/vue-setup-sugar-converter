@@ -2,6 +2,11 @@ import SFCParser from 'vue-sfc-parser';
 const BaseSFCBlock = SFCParser.SFCBlock;
 
 export default class SFCBlock extends BaseSFCBlock {
+  /**
+   * Output the current SFC block to a string with the block type
+   * @param {{string: *}} extraAttrs Any additional properties to add to the HTML tag, i.e. lang="scss"
+   * @returns {string}
+   */
   getOutput(extraAttrs = {}) {
     let output = '';
 

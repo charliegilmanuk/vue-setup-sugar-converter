@@ -25,6 +25,10 @@ export default class Component {
   props = null;
   emits = null;
 
+  /**
+   * CConstructs Component class using a local file path
+   * @param {string} sourcePath
+   */
   constructor(sourcePath) {
     this.sourcePath = sourcePath;
 
@@ -39,11 +43,19 @@ export default class Component {
     }
   }
 
+  /**
+   * Get file name for this component
+   * @returns {string}
+   */
   get name() {
     const segments = this.sourcePath.split('/');
     return segments[segments.length - 1];
   }
 
+  /**
+   * Reconstructs the file as a string using the child blocks
+   * @returns {string}
+   */
   reconstructSFC() {
     let str = '';
 
@@ -60,6 +72,10 @@ export default class Component {
     return str;
   }
 
+  /**
+   * Write the reconstructed component file to the given destination directory
+   * @param {string} dir
+   */
   writeToFile(dir) {
     const { sourcePath } = this;
 
@@ -81,6 +97,11 @@ export default class Component {
     }
   }
 
+  /**
+   * Lint and fix the outputted component file
+   * @param {string} dir
+   * @returns {Promise<void>}
+   */
   async lintFile(dir) {
     const outputFile = path.join(__dirname, dir, this.sourcePath);
 

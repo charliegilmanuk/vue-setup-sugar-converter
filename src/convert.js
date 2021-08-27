@@ -3,6 +3,11 @@ import glob from 'glob';
 import Component from './models/Component.js';
 import NoInputException from './exceptions/NoInputException.js';
 
+/**
+ * Returns any .vue files that match the given glob pattern
+ * @param {string} pattern Glob pattern, e.g. './src/**'
+ * @returns {string[]} Array of paths containing .vue
+ */
 const getVueFiles = pattern => {
   if (!pattern) {
     throw NoInputException();
@@ -16,6 +21,12 @@ const getVueFiles = pattern => {
   return allSFC;
 };
 
+/**
+ * Takes a glob pattern, converts all .vue files to <script setup> format and
+ * outputs to given destination
+ * @param {string} pattern Glob pattern e.g. './src/**'
+ * @param {string} destination Output directory
+ */
 const convert = (pattern, { destination = 'output' }) => {
   getVueFiles(pattern)
     .map(sourcePath => new Component(sourcePath))

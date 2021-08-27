@@ -1,5 +1,13 @@
 import chalk from 'chalk';
 
+/**
+ * Matches the given expression at a zero indentation level
+ * @param {RegExp} strToMatch
+ * @param {string} body
+ * @param {number} [startIndex=0]
+ * @param {number} [finishIndex]
+ * @returns {null|{index: number, length: number, match: string}}
+ */
 export const matchInRoot = (
   strToMatch,
   body,
@@ -49,30 +57,30 @@ export const matchInRoot = (
 
 /**
  * Returns script between two specified brackets
- * @param {string} str
- * @param startExp
- * @param startChar
- * @param endChar
+ * @param {string} body
+ * @param {RegExp} startExp Start of matched expression, e.g. to match the props object use /props:\s?{/
+ * @param {string} [startChar={]
+ * @param {string} [endChar=}]
  */
 export const matchScriptBetween = (
-  str,
+  body,
   startExp,
   startChar = '{',
   endChar = '}'
 ) => {
-  const match = str.match(startExp);
+  const match = body.match(startExp);
 
   if (match) {
     const matchLength = match[0].length;
-    const startIndex = str.search(startExp);
+    const startIndex = body.search(startExp);
     let finishIndex = null;
     let startBracketsCount = 0;
     let endBracketsCount = 0;
 
-    for (let i = startIndex + matchLength - 1; i < str.length; i++) {
+    for (let i = startIndex + matchLength - 1; i < body.length; i++) {
       if (!finishIndex) {
-        if (str[i] === startChar) startBracketsCount++;
-        if (str[i] === endChar) {
+        if (body[i] === startChar) startBracketsCount++;
+        if (body[i] === endChar) {
           endBracketsCount++;
           if (endBracketsCount === startBracketsCount) {
             finishIndex = i;
@@ -92,7 +100,7 @@ export const matchScriptBetween = (
       let startOfValue = startIndex + matchLength;
       return {
         full: {
-          result: str.substr(
+          result: body.substr(
             startIndex,
             finishIndex - startIndex + startChar.length
           ),
@@ -100,7 +108,7 @@ export const matchScriptBetween = (
           finish: finishIndex,
         },
         matched: {
-          result: str.substr(startOfValue, finishIndex - startOfValue),
+          result: body.substr(startOfValue, finishIndex - startOfValue),
           start: startOfValue,
           finish: finishIndex,
         },
@@ -111,9 +119,15 @@ export const matchScriptBetween = (
   return null;
 };
 
-export const findAndExtractKey = (str, options) => {
+/**
+ * Helper method basically used to simplify the matchScriptBetween method calls
+ * @param body
+ * @param {{startExp: RegExp, startChar: string, endChar: string}} options
+ * @returns {null|{result: string, key: string}}
+ */
+export const findAndExtractKey = (body, options) => {
   const search = matchScriptBetween(
-    str,
+    body,
     options.startExp,
     options.startChar || undefined,
     options.endChar || undefined
@@ -122,7 +136,7 @@ export const findAndExtractKey = (str, options) => {
   if (search) {
     return {
       key: options.startChar + search.matched.result + options.endChar,
-      result: str.replace(search.full.result, ''),
+      result: body.replace(search.full.result, ''),
     };
   }
 
