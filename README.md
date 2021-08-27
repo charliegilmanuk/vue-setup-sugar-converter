@@ -48,8 +48,10 @@ You could probably set the output directory to the same as the input but obvious
 
 ## Limitations
 
+These are mostly down to not having any components to use as test cases (or general 3.2+ changes) so feel free to provide some:
+
 - ❌ Components **must** be in composition API format already, it cannot convert from options API
-- ❌ TypeScript components are not tested and are unlikely to work (but feel free to give me examples to test/make work)
+- ❌ TypeScript components are not tested and are unlikely to work
 - ❌ Any objects in the default exported object other than `name/components/props/emits/setup()` may break the conversion, for example `serverPrefetch`, these could be supported by popular request
 - ❗ If your components use a name attribute that's different to the file name, any parent's references to that child may break as the `components` object doesn't exist with the new format 
 - ❗ Any methods/properties that are exposed to a parent should now be [explicitly declared using `defineExpose`](https://v3.vuejs.org/api/sfc-script-setup.html#defineexpose)
