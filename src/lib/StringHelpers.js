@@ -21,14 +21,20 @@ export const matchInRoot = (
       const matchIndex = body.search(
         match.replace(/[()]/gi, group => '\\' + group)
       );
+      let searched = '';
       if (matchIndex >= startIndex && matchIndex <= finishIndex) {
         for (let i = startIndex; i <= matchIndex; i++) {
           if (body[i] === '{') bracketOpenCount++;
           if (body[i] === '}') bracketCloseCount++;
+          searched += body[i];
         }
       }
 
-      if (bracketOpenCount === bracketCloseCount) {
+      if (
+        bracketOpenCount === bracketCloseCount ||
+        (searched.search('export default') > -1 &&
+          bracketOpenCount === bracketCloseCount + 1)
+      ) {
         result = {
           index: matchIndex,
           length: match.length,
