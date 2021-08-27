@@ -1,8 +1,4 @@
-import {
-  findAndExtractKey,
-  matchInRoot,
-  matchScriptBetween,
-} from '../lib/StringHelpers.js';
+import { findAndExtractKey, matchScriptBetween } from '../lib/StringHelpers.js';
 import SFCBlock from './SFCBlock.js';
 
 export default class ScriptBlock extends SFCBlock {
@@ -33,7 +29,7 @@ export default class ScriptBlock extends SFCBlock {
 
       this.content = this.content
         .replace(data.full.result, contentParts.join('\n'))
-        .replace(/\s*;/gi, '');
+        .replace(/;\s*[})]?;\s*$/gi, '');
     }
   }
 
@@ -57,7 +53,7 @@ export default class ScriptBlock extends SFCBlock {
 
   findAndRemoveProps() {
     const data = findAndExtractKey(this.content, {
-      startExp: new RegExp(/props:\s?{/gi),
+      startExp: new RegExp(/[^a-zA-Z]props:\s?{/gi),
       startChar: '{',
       endChar: '}',
     });
@@ -66,7 +62,7 @@ export default class ScriptBlock extends SFCBlock {
       this.props = data.key;
       this.content = data.result;
     } else {
-      const propExpr = new RegExp(/props:\s?(.+),\n?/i);
+      const propExpr = new RegExp(/[^a-zA-Z]props:\s?(.+),\n?/i);
       const match = this.content.match(propExpr);
       if (match) {
         const [fullMatch, valMatch] = match;
@@ -81,7 +77,7 @@ export default class ScriptBlock extends SFCBlock {
 
   findAndRemoveEmits() {
     const data = findAndExtractKey(this.content, {
-      startExp: new RegExp(/emits:\s?\[/gi),
+      startExp: new RegExp(/[^a-zA-Z]emits:\s?\[/gi),
       startChar: '[',
       endChar: ']',
     });
@@ -90,7 +86,7 @@ export default class ScriptBlock extends SFCBlock {
       this.emits = data.key;
       this.content = data.result;
     } else {
-      const emitExpr = new RegExp(/emits:\s?(.+),\n?/i);
+      const emitExpr = new RegExp(/[^a-zA-Z]emits:\s?([^,]+),\n?/i);
       const match = this.content.match(emitExpr);
       if (match) {
         const [fullMatch, valMatch] = match;
@@ -105,7 +101,7 @@ export default class ScriptBlock extends SFCBlock {
 
   findAndRemoveComponents() {
     const data = findAndExtractKey(this.content, {
-      startExp: new RegExp(/components:\s?{/gi),
+      startExp: new RegExp(/[^a-zA-Z]components:\s?{/gi),
       startChar: '{',
       endChar: '}',
     });
@@ -160,6 +156,6 @@ export default class ScriptBlock extends SFCBlock {
       }
     });
 
-    this.content = this.content.trim().replace(/\s\)$/, '\n');
+    this.content = this.content.trim().replace(/\s\);?$/, '\n');
   }
 }
