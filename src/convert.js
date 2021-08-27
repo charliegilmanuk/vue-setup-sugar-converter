@@ -14,7 +14,7 @@ const getVueFiles = pattern => {
   }
   const allSFC = glob
     .sync(pattern)
-    .filter(filePath => filePath.search(/\.vue/gi) > -1);
+    .filter(filePath => filePath.search(/\.vue$/gi) > -1);
 
   console.log(chalk.blue(`Found ${allSFC.length} Vue SFCs using input`));
 
